@@ -1,0 +1,39 @@
+name: Auto Unzip Uploaded Archive
+
+on:
+  push:
+    paths:
+      - '**.zip' # Triggers automatically whenever a .zip file is uploaded
+
+jobs:
+  unzip-archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to let the script push files back to your repo
+
+    steps:
+      - name: Checkout Repository Content
+        uses: actions/checkout@v4
+
+      - name: Extract Uploaded Zip Files
+        run: |
+          # Finds any .zip archive in the root directory
+          ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" | head -n 1)
+          
+          if [ -n "$ZIP_FILE" ]; then
+            echo "Found archive: $ZIP_FILE. Extracting..."
+            # Unzips contents directly into the repository root path
+            unzip -o "$ZIP_FILE" -d .
+            
+            # Deletes the original zip archive so it doesn't clutter the repo
+            rm "$ZIP_FILE"
+            echo "Extraction complete and archive cleaned up."
+          else
+            echo "No zip file detected."
+          fi
+
+      - name: Commit Extracted Files Back to Repository
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-unzip uploaded zip archive via GitHub Actions"
+          push_options: '--force'
