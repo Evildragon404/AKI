@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ server_name.upper() }} — {{ site_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--ac:{{ theme_color }};--ac-dim:{{ theme_color }}88;--ac-lite:{{ theme_color }}11;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#06010f;color:#e5e7eb;font-family:'JetBrains Mono',monospace;min-height:100vh;position:relative}
+        
+        header{background:rgba(10, 0, 21, 0.85);backdrop-filter:blur(10px);border-bottom:3px solid var(--ac-dim);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+        .logo{display:flex;align-items:center;gap:8px}
+        .logo-skull{font-size:20px;filter:drop-shadow(0 0 6px var(--ac))}
+        .logo-name{color:var(--ac);font-weight:700;font-size:15px;letter-spacing:1px;text-shadow:0 0 8px var(--ac)}
+        
+        .btn{padding:6px 14px;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;border:2px solid;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+        .btn-red{border-color:#ef444488;color:#ef4444;background:transparent}
+        .btn-red:hover{background:#ef444411}
+
+        main{padding:20px;max-width:750px;margin:0 auto;position:relative;z-index:2}
+        
+        /* Top Navigation Header */
+        .top-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        .btn-back{border-color:var(--ac-dim);color:var(--ac);background:transparent}
+        .status-pill{font-size:11px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:#ef4444}
+        .status-dot.running{background:var(--ac);box-shadow:0 0 8px var(--ac)}
+
+        /* Main Action Buttons Grid */
+        .control-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+        .ctrl-btn{padding:12px;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:2px solid;background:rgba(10, 0, 21, 0.85);backdrop-filter:blur(10px);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+        
+        .btn-start{border-color:var(--ac);color:var(--ac);background:var(--ac-lite)}
+        .btn-start:hover{background:var(--ac);color:#000;box-shadow:0 0 15px var(--ac-dim)}
+        .btn-restart{border-color:var(--ac-dim);color:var(--ac)}
+        .btn-restart:hover{background:var(--ac-lite)}
+        .btn-stop{border-color:#ef444488;color:#ef4444}
+        .btn-stop:hover{background:#ef444422}
+        
+        .btn-delete-full{width:100%;padding:12px;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:2px solid #ef444488;color:#ef4444;background:rgba(10, 0, 21, 0.85);margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+        .btn-delete-full:hover{background:#ef444422;border-color:#ef4444}
+
+        /* Tabs */
+        .tabs{display:flex;gap:8px;margin-bottom:16px;background:rgba(10, 0, 21, 0.85);padding:6px;border-radius:10px;border:2px solid #1a0a2a}
+        .tab-btn{flex:1;padding:8px;border:none;background:transparent;color:#6b7280;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;border-radius:6px;transition:all .2s;text-align:center}
+        .tab-btn.active{background:var(--ac-lite);color:var(--ac);border:1px solid var(--ac-dim)}
+
+        .tab-content{display:none}
+        .tab-content.active{display:block}
+
+        /* Console Box & Cards */
+        .console-box{background:rgba(6, 1, 15, 0.95);border:2px solid var(--ac-dim);border-radius:12px;overflow:hidden;box-shadow:0 0 20px var(--ac-lite)}
+        .console-header{padding:10px 14px;background:rgba(10, 0, 21, 0.9);border-bottom:2px solid var(--ac-dim);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--ac)}
+        .console-tools{display:flex;gap:6px}
+        .tool-btn{padding:4px 8px;border-radius:5px;font-size:9px;font-family:inherit;font-weight:700;cursor:pointer;background:transparent;border:1px solid}
+        
+        .console-body{padding:14px;height:350px;overflow-y:auto;font-size:12px;color:var(--ac);line-height:1.5;white-space:pre-wrap;word-break:break-all}
+        
+        /* Input Fields */
+        .cmd-bar{padding:10px 14px;border-top:2px solid var(--ac-dim);background:rgba(10, 0, 21, 0.9);display:flex;align-items:center;gap:8px}
+        .cmd-input{background:transparent;border:none;color:var(--ac);font-family:inherit;font-size:12px;outline:none;width:100%}
+
+        .chips{display:flex;flex-wrap:wrap;gap:8px}
+        .chip{padding:7px 12px;border-radius:999px;border:1px solid var(--ac-dim);background:var(--ac-lite);color:var(--ac);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+        .chip:active{transform:scale(.95)}
+        .chip.busy{opacity:.5;pointer-events:none}
+        .chip.done{background:var(--ac);color:#000}
+        /* Upload Zone */
+        .file-upload-zone{border:2px dashed var(--ac-dim);padding:30px;text-align:center;border-radius:10px;background:var(--ac-lite);cursor:pointer;margin-bottom:15px;transition:all .2s}
+        .file-upload-zone:hover{background:rgba(10, 0, 21, 0.85);border-color:var(--ac)}
+
+        /* red + yellow smooth theme */
+        :root{--ac:#ffc83d;--ac2:#ff5a5f;--ac-dim:#ffc83d66;--ac-lite:#ffc83d14}
+        body{background:radial-gradient(ellipse at 50% 0%,#2e1a24 0,transparent 48%),#0d0b14}
+        header{background:rgba(16,12,22,.9);border-bottom:1px solid #ffc83d44}
+        .logo-skull,.logo-name{text-shadow:none}
+        .btn,.ctrl-btn,.tab-btn,.tool-btn,.chip,.btn-delete-full{transition:all .3s ease}
+        .btn-red,.btn-stop,.btn-delete-full{border-color:#ff5a5f88;color:#ff7a7e}
+        .btn-red:hover,.btn-stop:hover,.btn-delete-full:hover{background:#ff5a5f22;border-color:#ff5a5f}
+        .btn-start{border-color:#ffc83d;color:#ffd666;background:#ffc83d14}
+        .btn-start:hover{background:linear-gradient(110deg,#ff5a5f,#ffc83d);color:#1a0f00;border-color:#ffc83d;box-shadow:0 6px 18px #ffc83d33}
+        .btn-restart{border-color:#ffb03d88;color:#ffb03d}
+        .btn-restart:hover{background:#ffb03d18}
+        .ctrl-btn{background:rgba(22,16,28,.9)}
+        .console-box{border-color:#ffc83d44;box-shadow:none}
+        .console-body{color:#ffe08a}
+        .status-dot{background:#ff5a5f}
+        .status-dot.running{background:#ffc83d;box-shadow:0 0 6px #ffc83d88}
+        .chip{border-color:#ffc83d66;color:#ffd666}
+        .chip:hover{background:#ffc83d22}
+        .chip.done{background:linear-gradient(110deg,#ff5a5f,#ffc83d);color:#1a0f00;border-color:transparent}
+        .tab-btn.active{background:#ffc83d14;color:#ffd666;border:1px solid #ffc83d66}
+
+        /* extra smooth */
+        html{scroll-behavior:smooth}
+        @keyframes zxFadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+        @keyframes zxFade{from{opacity:0}to{opacity:1}}
+        .top-nav,.control-grid,.btn-delete-full,.tabs{animation:zxFadeUp .55s cubic-bezier(.22,.8,.26,1) both}
+        .control-grid{animation-delay:.05s}.btn-delete-full{animation-delay:.1s}.tabs{animation-delay:.15s}
+        .tab-content.active{animation:zxFadeUp .45s cubic-bezier(.22,.8,.26,1) both}
+        .btn,.ctrl-btn,.tab-btn,.tool-btn,.chip,.btn-delete-full,.cmd-input,.file-upload-zone,.console-box{transition:all .35s cubic-bezier(.22,.8,.26,1)}
+        .ctrl-btn:hover,.btn-delete-full:hover{transform:translateY(-1px)}
+        .ctrl-btn:active,.btn:active,.chip:active,.tool-btn:active,.tab-btn:active{transform:scale(.96);transition-duration:.12s}
+        .chip:hover{transform:translateY(-1px)}
+        .console-body{scroll-behavior:smooth}
+        .cmd-input:focus{box-shadow:0 0 0 3px #ffc83d1a;border-color:#ffc83d}
+        #fileListContainer li{animation:zxFade .4s ease both;transition:all .3s cubic-bezier(.22,.8,.26,1)}
+        #fileListContainer li:hover{background:#ffc83d10!important}
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    </style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+</head>
+<body>
+<header>
+        <div class="logo">
+            <span class="logo-skull">TEAM AKI 👑</span>
+            <span class="logo-name">{{ site_name }}</span>
+        </div>
+        <div class="server-header-actions">
+            {% if is_admin %}<a href="{{ url_for('diagnostics_page') }}" class="btn">DIAGNOSTICS ◈</a>{% endif %}
+            <form action="{{ url_for('logout') }}" method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-red">↳ Logout</button></form>
+        </div>
+    </header>
+
+    <main class="server-main">
+        <!-- Top Nav -->
+        <div class="top-nav">
+            <a href="/dashboard" class="btn btn-back">← BACK</a>
+            <div class="status-pill">
+                <span class="status-dot {{ 'running' if config.status == 'running' else '' }}"></span>
+                <span style="color: {{ '#ffc83d' if config.status == 'running' else '#ff5a5f' }}">
+                    {{ config.status.upper() }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="control-grid">
+            <button class="ctrl-btn btn-start" onclick="startServer()">▶ START</button>
+            <button class="ctrl-btn btn-restart" onclick="restartServer()">↻ RESTART</button>
+            <button class="ctrl-btn btn-stop" onclick="stopServer()">■ STOP</button>
+        </div>
+
+        <form action="/server/delete/{{ server_name }}" method="POST" onsubmit="return confirm('Delete {{ server_name }}?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-delete-full">🗑 DELETE SERVER</button>
+        </form>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('logs', event)">LOGS</button>
+            <button class="tab-btn" onclick="switchTab('files', event)">FILES</button>
+            <button class="tab-btn" onclick="switchTab('packages', event)">PACKAGES</button>
+            <button class="tab-btn" onclick="switchTab('settings', event)">SETTINGS</button>
+        </div>
+
+        <!-- 1. LOGS TAB -->
+        <div id="tab-logs" class="tab-content active">
+            <div class="console-box">
+                <div class="console-header">
+                    <div>&gt;_ CONSOLE <span style="font-size:9px;opacity:0.7">● {{ server_name }}</span></div>
+                    <div class="console-tools">
+                        <button class="tool-btn" style="border-color:#ef4444;color:#ef4444" onclick="clearLogs()">✕ CLEAR</button>
+                        <button class="tool-btn" style="border-color:var(--ac);color:var(--ac)" onclick="fetchLogs()">↻ REFRESH</button>
+                    </div>
+                </div>
+                <div id="logsBody" class="console-body">Loading console logs...</div>
+                
+                <div class="cmd-bar">
+                    <span style="color:var(--ac);font-weight:700">&gt;</span>
+                    <input type="text" id="cmdInput" class="cmd-input" placeholder="Type a command..." onkeydown="if(event.key==='Enter')execCmd()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FILES TAB (UPLOAD + FILE LIST) -->
+        <div id="tab-files" class="tab-content">
+            <div class="console-box" style="padding:20px">
+                <div style="margin-bottom:12px;font-size:12px;color:var(--ac);font-weight:700">📁 UPLOAD SERVER FILES</div>
+                
+                <form action="/server/{{ server_name }}/upload" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="file-upload-zone" onclick="document.getElementById('fileInput').click()">
+                        <div style="font-size:30px;margin-bottom:8px">📤</div>
+                        <div style="font-size:12px;color:var(--ac)">Click or drop a ZIP archive or project file (Python, Node.js, PHP, Go, shell, or static site)</div>
+                        <input type="file" id="fileInput" name="file" style="display:none" onchange="this.form.submit()">
+                    </div>
+                    <button type="submit" class="btn btn-start" style="width:100%;margin-bottom:20px">UPLOAD NOW</button>
+                </form>
+
+                <div style="margin-bottom:10px;font-size:12px;color:var(--ac);font-weight:700;border-top:1px solid var(--ac-dim);padding-top:15px">
+                    📋 UPLOADED FILES LIST
+                </div>
+
+                <div id="fileListContainer" style="max-height: 220px; overflow-y: auto;">
+                    {% if files %}
+                        <ul style="list-style:none;padding:0;margin:0">
+                            {% for file in files %}
+                            <li style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(10, 0, 21, 0.6);border:1px solid var(--ac-dim);border-radius:6px;margin-bottom:6px;font-size:11px;color:var(--ac)">
+                                <span>📄 {{ file.name if file.name is defined else file }}</span>
+                                <button type="button" data-file-path="{{ file.path if file.path is defined else file }}" onclick="deleteFile(this.dataset.filePath)" class="btn btn-red" style="padding:6px 10px;font-size:10px">DELETE</button>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div style="font-size:11px;color:#6b7280;text-align:center;padding:12px;border:1px dashed #374151;border-radius:6px">
+                            No files uploaded yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- 3. PACKAGES TAB -->
+        <div id="tab-packages" class="tab-content">
+            <div class="console-box" style="padding:20px">
+                <div style="margin-bottom:12px;font-size:12px;color:var(--ac);font-weight:700">📦 INSTALL PACKAGES / MODULES</div>
+                <p class="package-explainer" style="font-size:10px;color:#9ca3af;margin-bottom:12px">Python packages are installed once in the persistent shared host environment and can be used by every Python project. Node modules remain project-local.</p>
+
+                <div class="package-entry">
+                    <input type="text" id="pkgInput" class="cmd-input" placeholder="Package name (e.g. requests)" onkeydown="if(event.key==='Enter')installPackage()">
+                    <input type="text" id="pkgVersion" class="cmd-input" placeholder="Version (optional)">
+                    <button class="btn btn-start" type="button" onclick="installPackage()">INSTALL</button>
+                </div>
+                <input type="search" id="pkgFilter" class="cmd-input package-filter" placeholder="Filter suggested packages…" oninput="filterChips()">
+                <div id="pkgChips" class="chips"></div>
+                <div id="pkgMsg" class="package-message" role="status" aria-live="polite"></div>
+                <div class="installed-heading" id="packageScopeHeading">HOST PACKAGES</div>
+                <div id="installedPackages" class="installed-packages">Loading packages…</div>
+            </div>
+        </div>
+
+        <!-- 4. SETTINGS TAB -->
+        <div id="tab-settings" class="tab-content">
+            <div class="console-box" style="padding:20px">
+                <div style="margin-bottom:12px;font-size:12px;color:var(--ac);font-weight:700">⚙️ SERVER CONFIGURATION</div>
+                
+                <label style="font-size:10px;color:#9ca3af">MAIN FILE</label>
+                <input type="text" id="mainFileInput" class="cmd-input" style="border:1px solid var(--ac-dim);padding:8px;border-radius:6px;margin-bottom:12px" value="{{ config.main_file or '' }}" placeholder="e.g. main.py / src/app.py / index.js">
+                
+                <label style="font-size:10px;color:#9ca3af">CUSTOM COMMAND (OPTIONAL)</label>
+                <input type="text" id="mainCmdInput" class="cmd-input settings-input" value="{{ config.main_command or '' }}" placeholder="e.g. python3 main.py">
+                <label class="settings-label" for="portInput">APP PORT</label>
+                <input type="number" id="portInput" class="cmd-input settings-input" min="1024" max="65535" value="{{ config.port or 8080 }}" placeholder="8080">
+                <p class="settings-hint">Choose an available port from 1024 to 65535. Set a custom command only when your runtime needs it.</p>
+                <button class="btn btn-start" style="width:100%" onclick="saveSettings()">SAVE SETTINGS</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        async function apiFetch(url, options = {}) {
+            const headers = new Headers(options.headers || {});
+            if ((options.method || 'GET').toUpperCase() !== 'GET') headers.set('X-CSRF-Token', CSRF_TOKEN);
+            headers.set('Accept', 'application/json');
+            return window.fetch(url, {...options, headers, credentials: 'same-origin'});
+        }
+
+        // Tab Switching Fix
+        function switchTab(name, evt) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if(evt) evt.target.classList.add('active');
+            const target = document.getElementById('tab-' + name);
+            if(target) target.classList.add('active');
+        }
+
+        // Server Actions
+        async function startServer() {
+            try {
+                const response = await apiFetch('/server/{{ server_name }}/start', {method:'POST'});
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Could not start the project');
+                location.reload();
+            } catch (error) { alert(error.message); }
+        }
+
+        async function stopServer() {
+            try {
+                const response = await apiFetch('/server/{{ server_name }}/stop', {method:'POST'});
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Could not stop the project');
+                location.reload();
+            } catch (error) { alert(error.message); }
+        }
+
+        async function restartServer() {
+            try {
+                const stopped = await apiFetch('/server/{{ server_name }}/stop', {method:'POST'});
+                if (!stopped.ok) throw new Error('Stop failed');
+                await new Promise(resolve => setTimeout(resolve, 700));
+                const started = await apiFetch('/server/{{ server_name }}/start', {method:'POST'});
+                const result = await started.json();
+                if (!started.ok || !result.success) throw new Error(result.error || 'Start failed');
+                location.reload();
+            } catch (error) { alert('Restart failed: ' + error.message); }
+        }
+
+        // Logs Operations
+        async function fetchLogs() {
+            try {
+                const res = await apiFetch('/server/{{ server_name }}/logs');
+                const data = await res.json();
+                const box = document.getElementById('logsBody');
+                box.textContent = data.logs || 'No logs found.';
+                box.scrollTop = box.scrollHeight;
+            } catch(e) {}
+        }
+        setInterval(fetchLogs, 3000);
+        fetchLogs();
+
+        async function clearLogs() {
+            await apiFetch('/server/{{ server_name }}/logs/clear', { method: 'POST' });
+            fetchLogs();
+        }
+
+        // Command Execution & Package Install
+        async function sendCommand(cmd) {
+            await apiFetch('/server/{{ server_name }}/exec', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ command: cmd })
+            });
+            switchTab('logs');
+            setTimeout(fetchLogs, 500);
+        }
+
+        async function execCmd() {
+            const input = document.getElementById('cmdInput');
+            const cmd = input.value.trim();
+            if(!cmd) return;
+            input.value = '';
+            await sendCommand(cmd);
+        }
+
+        const PY_PKGS = ['requests','aiohttp','httpx','flask','fastapi','uvicorn','gunicorn','python-telegram-bot','pyTelegramBotAPI','aiogram','telethon','pyrogram','tgcrypto','discord.py','py-cord','nextcord','disnake','python-dotenv','pandas','numpy','scipy','matplotlib','Pillow','opencv-python-headless','beautifulsoup4','lxml','selenium','playwright','scrapy','pymongo','motor','redis','sqlalchemy','psycopg2-binary','mysql-connector-python','aiosqlite','cryptography','pycryptodome','PyJWT','bcrypt','loguru','colorama','rich','tqdm','pydantic','pyyaml','psutil','schedule','APScheduler','websockets','python-socketio','yt-dlp','pytube','gTTS','pyttsx3','openai','anthropic','google-generativeai','groq','langchain','transformers','torch','scikit-learn','tensorflow','qrcode','pyfiglet','emoji','pytz','python-dateutil','aiofiles','uvloop','ujson','orjson','speedtest-cli','pyshorteners','fake-useragent','cloudscraper','telegraph','Telethon','pyngrok'];
+        const NODE_PKGS = ['express','discord.js','telegraf','node-telegram-bot-api','grammy','whatsapp-web.js','@whiskeysockets/baileys','axios','node-fetch','got','cheerio','puppeteer','playwright','socket.io','ws','cors','body-parser','cookie-parser','express-session','dotenv','mongoose','mongodb','redis','ioredis','mysql2','pg','sequelize','sqlite3','better-sqlite3','jsonwebtoken','bcryptjs','moment','dayjs','lodash','chalk','colors','nodemon','pm2','multer','sharp','jimp','canvas','ffmpeg-static','fluent-ffmpeg','ytdl-core','yt-search','openai','@anthropic-ai/sdk','@google/generative-ai','node-cron','uuid','qrcode','qrcode-terminal','pino','winston','typescript','ts-node','cross-env','compression','helmet','morgan'];
+        const RUNTIME = "{{ config.runtime or 'python' }}";
+
+        function renderChips() {
+            const list = RUNTIME === 'node' ? NODE_PKGS : PY_PKGS;
+            const box = document.getElementById('pkgChips');
+            box.innerHTML = '';
+            list.forEach(p => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'chip';
+                b.textContent = p;
+                b.onclick = () => installPackage(p, b);
+                box.appendChild(b);
+            });
+        }
+        renderChips();
+        const packageScopeHeading = document.getElementById('packageScopeHeading');
+        const packageExplainer = document.querySelector('.package-explainer');
+        if (RUNTIME === 'node') {
+            packageScopeHeading.textContent = 'PROJECT DECLARED PACKAGES';
+            packageExplainer.textContent = 'Node.js dependencies are installed inside this project. Python projects use the shared host Python environment.';
+        } else if (RUNTIME === 'python') {
+            packageScopeHeading.textContent = 'SHARED HOST PACKAGES · ALL PYTHON PROJECTS';
+        }
+        if (!['python','node'].includes(RUNTIME)) {
+            document.querySelectorAll('.package-entry, .package-filter, #pkgChips, .installed-heading, #installedPackages').forEach(el => el.hidden = true);
+            document.getElementById('pkgMsg').textContent = RUNTIME === 'static' ? 'Static projects do not require a package manager.' : 'Package management is available for Python and Node.js projects.';
+        }
+        function filterChips() {
+            const query = document.getElementById('pkgFilter').value.toLowerCase();
+            document.querySelectorAll('#pkgChips .chip').forEach(chip => {
+                chip.hidden = !chip.textContent.toLowerCase().includes(query);
+            });
+        }
+        async function loadInstalledPackages() {
+            const box = document.getElementById('installedPackages');
+            try {
+                const response = await apiFetch('/server/{{ server_name }}/packages');
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.error || 'Could not load packages');
+                box.replaceChildren();
+                if (!data.packages.length) { box.textContent = RUNTIME === 'python' ? 'No shared Python packages installed yet.' : 'No packages declared yet.'; return; }
+                data.packages.forEach(pkg => {
+                    const row = document.createElement('div'); row.className = 'installed-package';
+                    const label = document.createElement('span'); label.textContent = pkg.name + (pkg.version ? ' · ' + pkg.version : '');
+                    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'btn btn-red'; remove.textContent = pkg.protected ? 'CORE' : 'REMOVE'; remove.disabled = Boolean(pkg.protected); remove.title = pkg.protected ? 'Required package manager component' : 'Remove package';
+                    remove.onclick = async () => {
+                        if (!confirm(RUNTIME === 'python' ? 'Remove ' + pkg.name + ' from the shared host environment? This affects every Python project.' : 'Remove ' + pkg.name + ' from this project?')) return;
+                        const result = await apiFetch('/server/{{ server_name }}/packages/remove', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:pkg.name})});
+                        const payload = await result.json();
+                        document.getElementById('pkgMsg').textContent = payload.success ? payload.message : (payload.error || 'Removal failed');
+                        loadInstalledPackages();
+                    };
+                    row.append(label, remove); box.appendChild(row);
+                });
+            } catch (error) { box.textContent = error.message; }
+        }
+        loadInstalledPackages();
+
+        const uploadZone = document.querySelector('.file-upload-zone');
+        const uploadInput = document.getElementById('fileInput');
+        if (uploadZone && uploadInput) {
+            ['dragenter','dragover'].forEach(type => uploadZone.addEventListener(type, event => {
+                event.preventDefault(); uploadZone.classList.add('dragging');
+            }));
+            ['dragleave','drop'].forEach(type => uploadZone.addEventListener(type, event => {
+                event.preventDefault(); uploadZone.classList.remove('dragging');
+            }));
+            uploadZone.addEventListener('drop', event => {
+                const files = event.dataTransfer && event.dataTransfer.files;
+                if (files && files.length) {
+                    uploadInput.files = files;
+                    uploadInput.form.requestSubmit();
+                }
+            });
+        }
+
+        async function installPackage(pkgName, chip) {
+            const input = document.getElementById('pkgInput');
+            const pkg = (pkgName || input.value).trim();
+            const version = document.getElementById('pkgVersion').value.trim();
+            const msg = document.getElementById('pkgMsg');
+            if (!pkg) { msg.textContent = 'Enter a package name!'; return; }
+            if (chip) chip.classList.add('busy');
+            msg.textContent = 'Installing ' + pkg + ' ...';
+            try {
+                const res = await apiFetch('/server/{{ server_name }}/packages/install', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name: pkg, version })
+                });
+                const d = await res.json();
+                msg.textContent = d.success ? '✔ ' + d.message : '✕ ' + (d.error || 'Failed');
+                if (d.success) {
+                    if (chip) chip.classList.add('done');
+                    if (!pkgName) { input.value = ''; document.getElementById('pkgVersion').value = ''; }
+                    setTimeout(loadInstalledPackages, 1200);
+                }
+            } catch (e) {
+                msg.textContent = '✕ Network error';
+            }
+            if (chip) chip.classList.remove('busy');
+            setTimeout(fetchLogs, 800);
+        }
+
+        // Settings Save
+        async function saveSettings() {
+            const mf = document.getElementById('mainFileInput').value.trim();
+            const mc = document.getElementById('mainCmdInput').value.trim();
+            const port = Number(document.getElementById('portInput').value || 8080);
+            const response = await apiFetch('/server/{{ server_name }}/settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ main_file: mf, main_command: mc, port })
+            });
+            const payload = await response.json();
+            alert(payload.success ? 'Settings saved successfully.' : (payload.error || 'Could not save settings.'));
+        }
+
+        // Delete Uploaded File
+        async function deleteFile(filename) {
+            if(!confirm(`Delete ${filename}?`)) return;
+            
+            try {
+                const res = await apiFetch(`/server/{{ server_name }}/file/delete`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ filename: filename })
+                });
+                if(res.ok) {
+                    location.reload();
+                } else {
+                    alert('Could not delete file.');
+                }
+            } catch(e) {
+                alert('Error deleting file.');
+            }
+        }
+    </script>
+</body>
+</html>

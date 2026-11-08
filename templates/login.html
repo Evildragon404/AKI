@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08070d">
+<title>TEAM AKI — Secure Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08070d;--panel:#100d17;--panel2:#15101e;--line:#302034;--red:#f04452;--red2:#ff6670;--muted:#928895;--white:#f8f4fa}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#281020 0,transparent 48%),radial-gradient(ellipse at 100% 100%,#180d22 0,transparent 40%),var(--bg);color:var(--white);font-family:Manrope,Arial,sans-serif;display:grid;place-items:center;padding:28px 16px;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.16;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 80%)}
+.glow{position:fixed;width:340px;height:340px;border-radius:50%;filter:blur(100px);opacity:.14;background:var(--red);top:-190px;left:calc(50% - 170px);pointer-events:none}
+.menu-btn{position:fixed;top:20px;left:20px;z-index:30;width:48px;height:48px;border:1px solid #ffffff20;border-radius:15px;background:#120d18d9;color:#fff;font-size:22px;cursor:pointer;backdrop-filter:blur(16px);box-shadow:0 8px 30px #0006}
+.drawer-shade{position:fixed;inset:0;background:#0009;z-index:39;opacity:0;visibility:hidden;transition:.25s}.drawer{position:fixed;z-index:40;left:0;top:0;height:100dvh;width:min(310px,84vw);padding:28px 20px;background:#100c16;border-right:1px solid #ffffff16;transform:translateX(-105%);transition:.3s cubic-bezier(.2,.8,.2,1);box-shadow:20px 0 60px #0008}.drawer.open{transform:translateX(0)}.drawer-shade.open{opacity:1;visibility:visible}
+.drawer-brand{font:500 14px 'DM Mono';letter-spacing:3px;color:var(--red);padding:20px 10px 30px}.drawer-link{display:flex;align-items:center;gap:14px;text-decoration:none;color:#ded5e2;padding:15px 14px;border:1px solid transparent;border-radius:13px;margin:7px 0;font-size:13px;font-weight:700}.drawer-link:hover{background:#f0445212;border-color:#f0445238;color:#fff}.drawer-link span{width:28px;text-align:center;font-size:18px}
+.shell{width:100%;max-width:460px;position:relative;z-index:2}.topline{display:flex;align-items:center;justify-content:space-between;margin:0 5px 16px 72px;color:#a79ba9;font:11px 'DM Mono';letter-spacing:1.4px}.online{display:flex;align-items:center;gap:8px}.online:before{content:"";width:7px;height:7px;border-radius:50%;background:#52d69b;box-shadow:0 0 12px #52d69b}
+.card{position:relative;overflow:hidden;border:1px solid #69313d;border-radius:27px;background:linear-gradient(145deg,#17101d 0%,#0d0a13 58%,#160d18 100%);padding:36px 30px 30px;box-shadow:0 30px 90px #0009,0 0 0 6px #f0445209,0 0 50px #f0445210}
+.card:before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,var(--red),#ff9a9f,transparent);opacity:.9}
+.brandmark{width:76px;height:76px;border-radius:23px;margin:0 auto 20px;display:grid;place-items:center;background:linear-gradient(145deg,#3a1725,#160f1c);border:1px solid #f0445266;box-shadow:0 12px 35px #f0445220,inset 0 1px #ffffff20;font:800 25px 'DM Mono';color:#fff;letter-spacing:-3px}
+h1{text-align:center;margin:0;color:#fff;font:800 25px Manrope;letter-spacing:5px}.subtitle{text-align:center;margin:9px 0 30px;color:#9c8797;font:11px 'DM Mono';letter-spacing:3px}
+.section-label{font:500 11px 'DM Mono';letter-spacing:2px;color:var(--red2);margin:0 0 13px}.error-box{padding:12px 14px;border-radius:11px;border:1px solid #f0445266;background:#f0445212;color:#ff8b93;font-size:12px;margin-bottom:15px}
+.field{margin-bottom:14px}.field label{display:block;margin:0 0 8px 3px;color:#b7aab9;font:10px 'DM Mono';letter-spacing:1.6px}.field input{width:100%;height:55px;border:1px solid #49303f;border-radius:13px;background:#09070d;color:#fff;padding:0 16px;font:14px Manrope;outline:none;transition:.2s}.field input:focus{border-color:var(--red);box-shadow:0 0 0 4px #f0445215}.field input::placeholder{color:#716373}
+.auth{width:100%;height:58px;margin-top:9px;border:1px solid #ff6973;border-radius:14px;background:linear-gradient(110deg,#e63849,#ff5964);color:white;font:800 12px 'DM Mono';letter-spacing:2.4px;cursor:pointer;box-shadow:0 10px 28px #f0445235;transition:.2s}.auth:hover{transform:translateY(-2px);box-shadow:0 15px 34px #f0445245}.auth:active{transform:scale(.99)}
+.trust{display:flex;align-items:center;justify-content:center;gap:8px;margin:22px 0 0;color:#786b7a;font:10px 'DM Mono';letter-spacing:1.3px}.trust i{width:6px;height:6px;border-radius:50%;background:#52d69b}
+.foot{text-align:center;color:#675968;font:9px 'DM Mono';letter-spacing:2px;margin:19px 0 0}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:15px}.feature{padding:12px 6px;text-align:center;border:1px solid #ffffff12;border-radius:12px;background:#ffffff04;color:#a99eaa;font-size:9px;letter-spacing:.5px}.feature b{display:block;font:16px 'DM Mono';color:#f07881;margin-bottom:5px}
+@media(max-width:380px){.card{padding:30px 20px}.topline{font-size:9px}.features{gap:6px}}
+
+/* red + yellow smooth theme */
+:root{--red:#ff5a5f;--red2:#ffb03d;--yellow:#ffc83d;--line:#3a2a35}
+*{-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(ellipse at 50% 0%,#2e1a24 0,transparent 50%),radial-gradient(ellipse at 100% 100%,#2a2210 0,transparent 42%),#0d0b14}
+.glow{background:linear-gradient(135deg,#ff5a5f,#ffc83d);opacity:.12}
+.card{border-color:#5a3a3a;box-shadow:0 24px 70px #0007,0 0 40px #ffc83d0d;transition:box-shadow .4s ease}
+.card:before{background:linear-gradient(90deg,transparent,#ff5a5f,#ffc83d,transparent)}
+.brandmark{border-color:#ffc83d66;background:linear-gradient(145deg,#3a1f25,#2a2210);box-shadow:0 10px 30px #ffc83d1a,inset 0 1px #ffffff20}
+h1{background:linear-gradient(90deg,#ff7a7e,#ffd666);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.section-label{color:#ffc83d}
+.field input{border-color:#4a3a40;transition:border-color .25s ease,box-shadow .25s ease}
+.field input:focus{border-color:#ffc83d;box-shadow:0 0 0 4px #ffc83d1a}
+.auth{background:linear-gradient(110deg,#ff5a5f,#ffc83d);color:#1a0f00;border:none;font-weight:800;box-shadow:0 8px 22px #ff5a5f2e;transition:transform .25s ease,box-shadow .25s ease,filter .25s ease}
+.auth:hover{filter:brightness(1.06);box-shadow:0 12px 28px #ffc83d33}
+.feature b{color:#ffc83d}
+.error-box{color:#ff9a9e;border-color:#ff5a5f66;background:#ff5a5f14}
+.menu-btn{border-color:#ffc83d44}
+.drawer-brand{color:#ffc83d}
+.drawer-link:hover{background:#ffc83d12;border-color:#ffc83d38}
+.stat b{color:#ffc83d}
+
+/* extra smooth */
+html{scroll-behavior:smooth}
+@keyframes zxFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes zxFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes zxGlow{0%,100%{opacity:.10}50%{opacity:.16}}
+.card{animation:zxFadeUp .7s cubic-bezier(.22,.8,.26,1) both}
+.features{animation:zxFadeUp .7s cubic-bezier(.22,.8,.26,1) .15s both}
+.topline{animation:zxFadeUp .6s cubic-bezier(.22,.8,.26,1) both}
+.brandmark{animation:zxFloat 5s ease-in-out infinite}
+.glow{animation:zxGlow 7s ease-in-out infinite}
+.field input,.auth,.menu-btn,.drawer-link,.feature,.stat{transition:all .35s cubic-bezier(.22,.8,.26,1)}
+.auth:hover{transform:translateY(-1px)}
+.auth:active{transform:scale(.985);transition-duration:.12s}
+.feature:hover,.stat:hover{transform:translateY(-2px);border-color:#ffc83d33}
+.menu-btn:hover{border-color:#ffc83d88;transform:scale(1.05)}
+.drawer{transition:transform .45s cubic-bezier(.22,.8,.26,1)}
+.drawer-shade{transition:opacity .4s ease,visibility .4s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+</head>
+<body id="top">
+<div class="glow"></div>
+<button class="menu-btn" type="button" aria-label="Open navigation" onclick="toggleMenu()">☰</button>
+<div class="drawer-shade" id="shade" onclick="toggleMenu()"></div>
+<nav class="drawer" id="drawer" aria-label="Quick navigation">
+  <div class="drawer-brand">TEAM AKI / NAVIGATION</div>
+  <a class="drawer-link" href="/"><span>⌂</span> HOME</a>
+  <a class="drawer-link" href="#login" onclick="toggleMenu()"><span>↳</span> SIGN IN</a>
+  <a class="drawer-link" href="#features" onclick="toggleMenu()"><span>▦</span> FEATURES</a>
+  <a class="drawer-link" href="#security" onclick="toggleMenu()"><span>◈</span> SECURITY</a>
+</nav>
+<main class="shell">
+  <div class="topline"><span>PRIVATE FILE CONSOLE</span><span class="online">ALL SYSTEMS READY</span></div>
+  <section class="card" id="login">
+    <div class="brandmark">AKI</div>
+    <h1>{{ site_name }}</h1>
+    <div class="subtitle">PERSONAL SERVER CONTROL</div>
+    <div class="section-label">01 / AUTHENTICATION</div>
+    {% if error %}<div class="error-box">! {{ error }}</div>{% endif %}
+    <form method="POST" autocomplete="on">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="username">USERNAME</label><input id="username" type="text" name="username" value="{{ username or '' }}" placeholder="Choose your username" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20"></div>
+      <div class="field"><label for="password">ACCESS PASSWORD</label><input id="password" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password"></div>
+      <button class="auth" type="submit">UNLOCK CONTROL PANEL&nbsp; →</button>
+    </form>
+    <div class="trust" id="security"><i></i> ENCRYPTED SESSION · PRIVATE ACCESS</div>
+    <div class="foot">AUTHORIZED USERS ONLY</div>
+  </section>
+  <section class="features" id="features">
+    <div class="feature"><b>01</b>PROJECTS</div><div class="feature"><b>02</b>CONSOLE</div><div class="feature"><b>03</b>FILE CONTROL</div>
+  </section>
+</main>
+<script>
+function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('shade').classList.toggle('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('drawer').classList.remove('open');document.getElementById('shade').classList.remove('open')}});
+</script></body></html>

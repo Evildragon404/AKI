@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090b12">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Diagnostics — {{ site_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+  <style>
+    body{margin:0;min-height:100vh;padding:28px 18px 64px}
+    .diag-wrap{width:min(1160px,100%);margin:0 auto;position:relative;z-index:1}
+    .diag-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 0 24px}
+    .diag-heading h1{font-size:clamp(26px,4vw,38px);margin:0 0 7px;letter-spacing:-1.2px}
+    .diag-heading p{margin:0;color:var(--aki-muted);font-size:13px}
+    .diag-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .diag-button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:13px;border:1px solid var(--aki-edge);background:rgba(255,255,255,.07);color:var(--aki-ink);font:700 11px 'DM Mono',monospace;text-decoration:none;cursor:pointer;transition:transform .2s,border-color .2s,background .2s}
+    .diag-button:hover{transform:translateY(-1px);border-color:rgba(244,201,93,.55);background:rgba(255,255,255,.11)}
+    .diag-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:14px}
+    .diag-card{min-width:0;padding:19px;border:1px solid var(--aki-edge);border-radius:21px;background:var(--aki-glass);box-shadow:var(--aki-shadow);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+    .diag-label{color:var(--aki-muted);font:500 10px 'DM Mono',monospace;letter-spacing:1.3px;text-transform:uppercase}
+    .diag-value{display:block;margin:10px 0 6px;font:700 clamp(23px,3vw,32px) 'DM Mono',monospace;letter-spacing:-1.3px}
+    .diag-note{font-size:11px;color:var(--aki-muted);line-height:1.5}
+    .diag-status{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(92,220,166,.28);border-radius:999px;color:#8ce7c3;background:rgba(92,220,166,.09);font:700 10px 'DM Mono',monospace;letter-spacing:.8px}
+    .diag-status.degraded{border-color:rgba(255,115,124,.35);color:#ff9da3;background:rgba(255,115,124,.1)}
+    .diag-dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor}
+    .diag-section{margin-top:15px;padding:22px;border:1px solid var(--aki-edge);border-radius:23px;background:var(--aki-glass);box-shadow:var(--aki-shadow);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+    .diag-section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:17px}
+    .diag-section h2{font-size:15px;letter-spacing:.2px;margin:0}
+    .diag-section-head p{font-size:11px;color:var(--aki-muted);margin:5px 0 0}
+    .diag-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .diag-metric{padding:15px;border-radius:15px;border:1px solid var(--aki-edge-soft);background:rgba(255,255,255,.035)}
+    .diag-metric strong{display:block;font:600 13px 'DM Mono',monospace;margin-bottom:6px;overflow-wrap:anywhere}
+    .diag-metric span{font-size:10px;color:var(--aki-muted)}
+    .log-feed{display:grid;gap:8px;max-height:540px;overflow:auto;padding-right:4px}
+    .log-entry{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:13px 14px;border:1px solid var(--aki-edge-soft);border-radius:14px;background:rgba(3,6,12,.34)}
+    .log-level{font:700 9px 'DM Mono',monospace;letter-spacing:.7px;padding-top:2px;color:#8ce7c3}
+    .log-level.warning{color:#ffd27a}.log-level.error,.log-level.critical{color:#ff9298}
+    .log-message{font:500 11px 'DM Mono',monospace;color:#eef0f7;overflow-wrap:anywhere}
+    .log-meta{font:10px 'DM Mono',monospace;color:var(--aki-muted);margin-top:6px;overflow-wrap:anywhere}
+    .log-detail{margin:8px 0 0;color:#aab1c4;font:10px/1.5 'DM Mono',monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+    .diag-footer{margin:17px 4px 0;color:var(--aki-muted);font-size:10px;line-height:1.6}
+    @media(max-width:850px){.diag-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:600px){body{padding:18px 12px 42px}.diag-header{align-items:flex-start;flex-direction:column}.diag-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.diag-card{padding:15px}.diag-section{padding:16px}.diag-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.log-entry{grid-template-columns:58px minmax(0,1fr);gap:8px;padding:11px}}
+    @media(max-width:360px){.diag-grid,.diag-metrics{grid-template-columns:1fr}.diag-actions{width:100%}.diag-button{flex:1}}
+  </style>
+</head>
+<body>
+  <main class="diag-wrap">
+    <div class="diag-header">
+      <div class="diag-heading">
+        <div class="diag-label">TEAM AKI / ADMIN CONTROL</div>
+        <h1>System diagnostics</h1>
+        <p>Live host health, storage status, project state, and application activity.</p>
+      </div>
+      <div class="diag-actions">
+        <a class="diag-button" href="{{ url_for('dashboard') }}">← Dashboard</a>
+        <button class="diag-button" type="button" onclick="refreshDiagnostics()">↻ Refresh</button>
+        <form method="post" action="{{ url_for('logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="diag-button" type="submit">Sign out</button>
+        </form>
+      </div>
+    </div>
+
+    <section class="diag-grid" aria-label="System summary">
+      <article class="diag-card"><div class="diag-label">Overall health</div><strong id="healthValue" class="diag-value">Checking</strong><div id="healthNote" class="diag-note">Reading system status…</div></article>
+      <article class="diag-card"><div class="diag-label">Uptime</div><strong id="uptimeValue" class="diag-value">—</strong><div id="runtimeNote" class="diag-note">Application process</div></article>
+      <article class="diag-card"><div class="diag-label">Projects running</div><strong id="projectsValue" class="diag-value">—</strong><div id="projectsNote" class="diag-note">Projects tracked by the panel</div></article>
+      <article class="diag-card"><div class="diag-label">Accounts</div><strong id="accountsValue" class="diag-value">—</strong><div id="accountsNote" class="diag-note">Configured login accounts</div></article>
+    </section>
+
+    <section class="diag-section">
+      <div class="diag-section-head"><div><h2>Host resources</h2><p>Updated automatically every five seconds.</p></div><span id="lastUpdated" class="diag-label">—</span></div>
+      <div class="diag-metrics">
+        <div class="diag-metric"><strong id="cpuValue">—</strong><span>CPU utilization</span></div>
+        <div class="diag-metric"><strong id="memoryValue">—</strong><span>Memory utilization</span></div>
+        <div class="diag-metric"><strong id="diskValue">—</strong><span>Persistent volume utilization</span></div>
+        <div class="diag-metric"><strong id="platformValue">—</strong><span>Runtime platform</span></div>
+        <div class="diag-metric"><strong id="pythonValue">—</strong><span>Python runtime</span></div>
+        <div class="diag-metric"><strong id="pidValue">—</strong><span>Application process ID</span></div>
+      </div>
+    </section>
+
+    <section class="diag-section">
+      <div class="diag-section-head"><div><h2>Storage & project state</h2><p>Checks the persistent data store and application log.</p></div></div>
+      <div class="diag-metrics">
+        <div class="diag-metric"><strong id="storageValue">—</strong><span>State storage</span></div>
+        <div class="diag-metric"><strong id="dataFileValue">—</strong><span>data.json size</span></div>
+        <div class="diag-metric"><strong id="logFileValue">—</strong><span>Application log size</span></div>
+        <div class="diag-metric"><strong id="projectTotalValue">—</strong><span>Total projects</span></div>
+        <div class="diag-metric"><strong id="stoppedValue">—</strong><span>Stopped projects</span></div>
+        <div class="diag-metric"><strong id="diskFreeValue">—</strong><span>Free persistent storage</span></div>
+      </div>
+    </section>
+
+    <section class="diag-section">
+      <div class="diag-section-head"><div><h2>Live application activity</h2><p>HTTP requests, login events, project actions, warnings, and runtime errors.</p></div><span class="diag-status" id="logStatus"><i class="diag-dot"></i> LIVE FEED</span></div>
+      <div id="logFeed" class="log-feed" aria-live="polite"><div class="diag-note">Loading application activity…</div></div>
+    </section>
+    <section class="diag-section">
+      <div class="diag-section-head"><div><h2>Project runtime output</h2><p>Recent stdout and stderr lines from uploaded project processes.</p></div></div>
+      <div id="runtimeFeed" class="log-feed"><div class="diag-note">Loading runtime output…</div></div>
+    </section>
+    <p class="diag-footer">Diagnostics are restricted to the configured administrator account. Uploaded project programs run with the operating-system privileges of this hosting process; use trusted projects only.</p>
+  </main>
+  <script>
+    const byId = id => document.getElementById(id);
+    const formatBytes = value => {
+      const number = Number(value || 0);
+      if (number < 1024) return number + ' B';
+      const units = ['KB','MB','GB','TB']; let n = number, i = -1;
+      do { n /= 1024; i++; } while (n >= 1024 && i < units.length - 1);
+      return n.toFixed(1) + ' ' + units[i];
+    };
+    const formatUptime = total => {
+      let seconds = Math.max(0, Number(total || 0));
+      const days = Math.floor(seconds / 86400); seconds %= 86400;
+      const hours = Math.floor(seconds / 3600); seconds %= 3600;
+      const minutes = Math.floor(seconds / 60);
+      return (days ? days + 'd ' : '') + hours + 'h ' + minutes + 'm';
+    };
+    function renderLogs(entries) {
+      const feed = byId('logFeed');
+      feed.replaceChildren();
+      if (!entries || !entries.length) {
+        const empty = document.createElement('div'); empty.className = 'diag-note';
+        empty.textContent = 'No application activity has been recorded yet.'; feed.appendChild(empty); return;
+      }
+      for (const item of entries) {
+        const entry = document.createElement('article'); entry.className = 'log-entry';
+        const level = document.createElement('div'); level.className = 'log-level ' + String(item.level || 'INFO').toLowerCase();
+        level.textContent = item.level || 'INFO';
+        const content = document.createElement('div');
+        const message = document.createElement('div'); message.className = 'log-message'; message.textContent = item.message || item.event || 'Application event';
+        const meta = document.createElement('div'); meta.className = 'log-meta';
+        const details = [];
+        if (item.timestamp) details.push(item.timestamp);
+        if (item.method && item.path) details.push(item.method + ' ' + item.path + (item.status_code ? ' · ' + item.status_code : ''));
+        if (item.username) details.push('user=' + item.username);
+        if (item.duration_ms !== undefined) details.push(item.duration_ms + ' ms');
+        if (item.remote_addr) details.push('ip=' + item.remote_addr);
+        meta.textContent = details.join('  |  ');
+        content.append(message, meta);
+        if (item.details && Object.keys(item.details).length) {
+          const detail = document.createElement('pre'); detail.className = 'log-detail'; detail.textContent = JSON.stringify(item.details, null, 2); content.appendChild(detail);
+        }
+        if (item.exception) {
+          const exception = document.createElement('pre'); exception.className = 'log-detail'; exception.textContent = item.exception; content.appendChild(exception);
+        }
+        entry.append(level, content); feed.appendChild(entry);
+      }
+    }
+    function renderRuntimeLogs(items) {
+      const feed = byId('runtimeFeed'); feed.replaceChildren();
+      if (!items || !items.length) {
+        const empty = document.createElement('div'); empty.className = 'diag-note';
+        empty.textContent = 'No project runtime output is available yet.'; feed.appendChild(empty); return;
+      }
+      for (const item of items) {
+        const wrapper = document.createElement('article'); wrapper.className = 'log-entry';
+        const label = document.createElement('div'); label.className = 'log-level'; label.textContent = item.status || 'PROJECT';
+        const content = document.createElement('div');
+        const heading = document.createElement('div'); heading.className = 'log-message'; heading.textContent = item.project;
+        const output = document.createElement('pre'); output.className = 'log-detail'; output.textContent = (item.lines || []).join('\n');
+        content.append(heading, output); wrapper.append(label, content); feed.appendChild(wrapper);
+      }
+    }
+    async function refreshDiagnostics() {
+      try {
+        const response = await fetch('{{ url_for("diagnostics_api") }}', {credentials:'same-origin', headers:{'Accept':'application/json'}});
+        if (!response.ok) throw new Error('Diagnostics endpoint returned ' + response.status);
+        const data = await response.json();
+        byId('healthValue').textContent = data.status.toUpperCase();
+        byId('healthNote').textContent = data.storage.healthy ? 'Application and storage checks passed' : 'One or more storage checks need attention';
+        byId('healthValue').style.color = data.status === 'healthy' ? '#8ce7c3' : '#ff9298';
+        byId('uptimeValue').textContent = formatUptime(data.app.uptime_seconds);
+        byId('runtimeNote').textContent = 'PID ' + data.app.pid + ' · ' + data.app.platform;
+        byId('projectsValue').textContent = data.projects.running + ' / ' + data.projects.total;
+        byId('projectsNote').textContent = data.projects.stopped + ' stopped';
+        byId('accountsValue').textContent = data.accounts.total;
+        byId('accountsNote').textContent = 'Configured login accounts';
+        byId('cpuValue').textContent = data.resources.cpu_percent == null ? 'Unavailable' : data.resources.cpu_percent + '%';
+        byId('memoryValue').textContent = data.resources.memory_percent == null ? 'Unavailable' : data.resources.memory_percent + '%';
+        byId('diskValue').textContent = data.resources.disk_percent == null ? 'Unavailable' : data.resources.disk_percent + '%';
+        byId('platformValue').textContent = data.app.platform;
+        byId('pythonValue').textContent = data.app.python_version;
+        byId('pidValue').textContent = data.app.pid;
+        byId('storageValue').textContent = data.storage.healthy ? 'HEALTHY' : 'CHECK';
+        byId('dataFileValue').textContent = formatBytes(data.storage.data_file_size_bytes);
+        byId('logFileValue').textContent = formatBytes(data.storage.application_log_size_bytes);
+        byId('projectTotalValue').textContent = data.projects.total;
+        byId('stoppedValue').textContent = data.projects.stopped;
+        byId('diskFreeValue').textContent = formatBytes(data.resources.disk_free_bytes);
+        byId('lastUpdated').textContent = new Date(data.timestamp).toLocaleTimeString();
+        byId('logStatus').classList.toggle('degraded', data.status !== 'healthy');
+        renderLogs(data.recent_logs);
+        renderRuntimeLogs(data.project_runtime_logs);
+      } catch (error) {
+        byId('healthValue').textContent = 'OFFLINE';
+        byId('healthValue').style.color = '#ff9298';
+        byId('healthNote').textContent = error.message;
+      }
+    }
+    refreshDiagnostics();
+    window.setInterval(refreshDiagnostics, 5000);
+  </script>
+</body>
+</html>

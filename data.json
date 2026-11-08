@@ -1,0 +1,51 @@
+{
+  "servers": {
+    "Test": {
+      "name": "Test",
+      "owner": "aki",
+      "runtime": "python",
+      "status": "stopped",
+      "main_file": "",
+      "main_command": "",
+      "port": 8080,
+      "pid": null,
+      "created": "2026-11-06T21:54:55.798938",
+      "manual_stop": false,
+      "auto_restart_armed": false
+    },
+    "Zx-jihad": {
+      "name": "Zx-jihad",
+      "owner": "aki",
+      "runtime": "python",
+      "status": "stopped",
+      "main_file": "",
+      "main_command": "",
+      "port": 8080,
+      "pid": null,
+      "created": "2026-11-07T14:33:06.197771",
+      "manual_stop": false,
+      "auto_restart_armed": false
+    }
+  },
+  "users": {
+    "admin": {
+      "joined": "2026-11-06T20:13:19.281979",
+      "password_hash": "44838beb321594a92f1029c2b711e681aeed749c1253fc302c4dd681b5e30b77"
+    },
+    "jihad224": {
+      "joined": "2026-11-07T14:32:59.699059",
+      "password_hash": "44838beb321594a92f1029c2b711e681aeed749c1253fc302c4dd681b5e30b77"
+    },
+    "aki": {
+      "joined": "2026-11-08T00:00:00",
+      "password_hash": "69c36670d68c8b38f8bce5b13702fe8a3f7b2ae0834f38f901ca9be9b4b8372d"
+    }
+  },
+  "settings": {
+    "maintenance": false,
+    "maintenance_msg": "System under maintenance.",
+    "theme_color": "#ffc83d",
+    "site_name": "TEAM AKI",
+    "auto_restart_interval": 300
+  }
+}

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ site_name }} — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ac: {{ theme_color }};
+            --ac-dim: {{ theme_color }}66;
+            --ac-lite: {{ theme_color }}18;
+            --bg-dark: #08090e;
+            --card-bg: rgba(16, 18, 27, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: var(--bg-dark);
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        code, pre, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        header {
+            background: rgba(10, 11, 18, 0.8);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { font-size: 22px; filter: drop-shadow(0 0 10px var(--ac)); }
+        .logo-name {
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: #9ca3af;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+        }
+
+        .header-stats span { display: flex; align-items: center; gap: 4px; }
+        .header-stats strong { color: var(--ac); }
+
+        .btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all .2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-red {
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        .btn-red:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.2);
+        }
+
+        main {
+            padding: 30px 20px;
+            max-width: 760px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+
+        .stat-num {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .stat-num.ac { color: var(--ac); text-shadow: 0 0 16px var(--ac-dim); }
+        .stat-num.white { color: #f9fafb; }
+        .stat-label { font-size: 11px; color: #6b7280; font-weight: 600; letter-spacing: 1.5px; }
+
+        .server-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid #374151;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all .25s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .server-card.running { border-left-color: var(--ac); }
+        .server-card.stopped { border-left-color: #ef4444; }
+        .server-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        .server-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .server-name { font-weight: 700; font-size: 16px; color: #fff; letter-spacing: .3px; font-family: 'JetBrains Mono', monospace; }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            border: 1px solid;
+        }
+        .status-badge.running {
+            border-color: var(--ac);
+            color: var(--ac);
+            background: var(--ac-lite);
+            box-shadow: 0 0 10px var(--ac-lite);
+        }
+        .status-badge.stopped { border-color: rgba(239, 68, 68, 0.4); color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+        .server-sub { font-size: 12px; color: #9ca3af; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; }
+
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .action-btn {
+            height: 38px;
+            padding: 0 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            font-family: inherit;
+            border: 1px solid var(--card-border);
+            color: #d1d5db;
+            text-decoration: none;
+        }
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .fab {
+            bottom: 32px;
+            right: 32px;
+            position: fixed;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: var(--ac);
+            color: #000 !important;
+            border: none;
+            font-size: 28px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 25px var(--ac-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: all .25s ease;
+        }
+        .fab:hover { transform: scale(1.08) rotate(90deg); }
+
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-bg.show { display: flex; }
+        .modal {
+            background: #0f111a;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 28px;
+            width: 340px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .modal-title { font-size: 14px; font-weight: 700; color: var(--ac); letter-spacing: 1.5px; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 11px; color: #9ca3af; display: block; margin-bottom: 8px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            transition: all .2s;
+        }
+        .form-input:focus { border-color: var(--ac); background: rgba(255, 255, 255, 0.07); }
+        select.form-input option { background: #0f111a; color: #fff; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            background: var(--ac);
+            color: #000;
+            transition: all .2s;
+        }
+        .modal-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .modal-cancel { background: rgba(255, 255, 255, 0.05); color: #9ca3af; border: 1px solid var(--card-border); }
+        .modal-cancel:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+        :root{--ac:#f04452;--ac-dim:#f0445266;--ac-lite:#f0445218;--bg-dark:#08070d;--card-bg:rgba(19,13,24,.88);--card-border:rgba(255,255,255,.09)}
+        body{background:radial-gradient(ellipse at 50% 0%,#281020 0,transparent 45%),#08070d}
+        header{background:rgba(12,9,16,.92);border-bottom:1px solid #f0445240;padding:15px 20px 15px 78px}
+        .logo-name{letter-spacing:2px}.logo-icon{color:#f04452}
+        .nav-toggle{position:fixed;top:12px;left:16px;z-index:80;width:44px;height:44px;border:1px solid #f0445266;border-radius:13px;background:#160f1b;color:#fff;font-size:20px;cursor:pointer}
+        .nav-shade{position:fixed;inset:0;background:#000a;z-index:89;opacity:0;visibility:hidden;transition:.25s}
+        .nav-shade.open{opacity:1;visibility:visible}
+        .side-nav{position:fixed;z-index:90;left:0;top:0;height:100dvh;width:min(300px,84vw);padding:28px 18px;background:#100c16;border-right:1px solid #ffffff18;transform:translateX(-105%);transition:.28s;box-shadow:20px 0 60px #0008}
+        .side-nav.open{transform:translateX(0)}
+        .nav-brand{padding:22px 12px 30px;color:#f04452;font:600 13px 'JetBrains Mono';letter-spacing:3px}
+        .side-nav a{display:block;color:#e7dfe9;text-decoration:none;padding:15px 14px;margin:7px 0;border:1px solid transparent;border-radius:12px;font-size:13px;font-weight:700}
+        .side-nav a:hover{background:#f0445215;border-color:#f0445240}
+        main{max-width:780px;padding-top:32px}
+        .welcome-line{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 25px}
+        .welcome-line small{font:11px 'JetBrains Mono';letter-spacing:2px;color:#f07881}
+        .welcome-line h1{font-size:24px;margin:8px 0 4px;color:#fff}.welcome-line p{font-size:12px;color:#958997}
+        .count-chip{border:1px solid #f0445255;background:#f0445212;border-radius:30px;padding:10px 13px;color:#ff818a;font:10px 'JetBrains Mono';white-space:nowrap}
+        .server-card{background:linear-gradient(145deg,#17101d,#0e0a14);border:1px solid #382238;border-left:4px solid #f04452;border-radius:18px;padding:20px;box-shadow:0 18px 42px #0005}
+        .server-card:hover{border-color:#71404b;transform:translateY(-3px)}
+        .status-badge.running{border-color:#f04452;color:#ff727b;background:#f0445216;box-shadow:0 0 15px #f0445218}
+        .action-btn{border-color:#49303f;background:#17101d;color:#eee;border-radius:10px;height:42px;min-width:44px}
+        .action-btn:hover{border-color:#f04452;background:#f0445218}
+        .fab{background:linear-gradient(145deg,#ff6570,#e63245);color:white!important;border-radius:18px;box-shadow:0 12px 30px #f0445250}
+        .stat-card,.modal{background:#130e19;border-color:#382238}
+        @media(max-width:560px){header{padding:14px 14px 14px 72px}.header-stats{display:none!important}.welcome-line{align-items:flex-start;flex-direction:column}.welcome-line h1{font-size:21px}main{padding:24px 15px}.server-card{padding:17px}.fab{right:20px;bottom:22px}}
+
+
+        /* red + yellow smooth theme */
+        :root{--ac:#ff6b6b;--ac2:#ffc83d;--ac-dim:#ffc83d55;--ac-lite:#ffc83d14}
+        body{background:radial-gradient(ellipse at 50% 0%,#2e1a24 0,transparent 48%),radial-gradient(ellipse at 100% 100%,#2a2210 0,transparent 40%),#0d0b14}
+        header{border-bottom:1px solid #ffc83d33}
+        .logo-icon{color:#ffc83d}.logo-name{color:#ffd666}
+        .nav-toggle{border-color:#ffc83d55}
+        .nav-brand{color:#ffc83d}
+        .side-nav a:hover{background:#ffc83d12;border-color:#ffc83d38}
+        .header-stats strong{color:#ffc83d}
+        .welcome-line small{color:#ffc83d}
+        .count-chip{border-color:#ffc83d55;background:#ffc83d12;color:#ffd666}
+        .stat-num.ac{color:#ffc83d;text-shadow:0 0 14px #ffc83d44}
+        .stat-card,.server-card,.action-btn,.fab,.modal-btn,.btn{transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease,background .3s ease,filter .3s ease}
+        .server-card{background:linear-gradient(145deg,#1b1420,#120e18);border-color:#3a2a38;box-shadow:0 10px 28px #0004}
+        .server-card.running{border-left-color:#ffc83d}
+        .server-card.stopped{border-left-color:#ff5a5f}
+        .server-card:hover{border-color:#6a4a3a;box-shadow:0 14px 34px #0006}
+        .status-badge.running{border-color:#ffc83d;color:#ffd666;background:#ffc83d16;box-shadow:none}
+        .status-badge.stopped{border-color:#ff5a5f88;color:#ff7a7e;background:#ff5a5f14}
+        .action-btn{background:#1b1420;border-color:#4a3a40;color:#f3eef5}
+        .action-btn:hover{border-color:#ffc83d;background:#ffc83d14}
+        .fab{background:linear-gradient(135deg,#ff5a5f,#ffc83d);color:#1a0f00!important;box-shadow:0 10px 26px #ff5a5f33}
+        .fab:hover{transform:scale(1.06) rotate(90deg);box-shadow:0 14px 30px #ffc83d40}
+        .modal-title{color:#ffc83d}
+        .form-input:focus{border-color:#ffc83d}
+        .modal-btn{background:linear-gradient(110deg,#ff5a5f,#ffc83d);color:#1a0f00}
+        .modal-cancel{background:#ffffff0d;color:#cfc6d2;border:1px solid var(--card-border)}
+        .btn-red{border-color:#ff5a5f66;color:#ff7a7e;background:#ff5a5f0f}
+        .btn-red:hover{background:#ff5a5f22;border-color:#ff5a5f;box-shadow:none}
+
+        /* extra smooth */
+        html{scroll-behavior:smooth}
+        @keyframes zxFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        @keyframes zxPop{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+        @keyframes zxFade{from{opacity:0}to{opacity:1}}
+        .welcome-line{animation:zxFadeUp .6s cubic-bezier(.22,.8,.26,1) both}
+        .stat-card{animation:zxFadeUp .6s cubic-bezier(.22,.8,.26,1) both}
+        .stat-card:nth-child(2){animation-delay:.08s}
+        .server-card{animation:zxFadeUp .6s cubic-bezier(.22,.8,.26,1) both}
+        .server-card:nth-of-type(2){animation-delay:.06s}.server-card:nth-of-type(3){animation-delay:.12s}.server-card:nth-of-type(4){animation-delay:.18s}.server-card:nth-of-type(n+5){animation-delay:.24s}
+        .modal-bg.show{animation:zxFade .3s ease both}
+        .modal-bg.show .modal{animation:zxPop .4s cubic-bezier(.22,.8,.26,1) both}
+        .server-card,.stat-card,.action-btn,.fab,.modal-btn,.btn,.nav-toggle,.side-nav a,.form-input,.count-chip,.status-badge{transition:all .35s cubic-bezier(.22,.8,.26,1)}
+        .server-card:hover,.stat-card:hover{transform:translateY(-2px)}
+        .action-btn:active,.modal-btn:active,.btn:active,.fab:active{transform:scale(.96);transition-duration:.12s}
+        .side-nav{transition:transform .45s cubic-bezier(.22,.8,.26,1)}
+        .nav-shade{transition:opacity .4s ease,visibility .4s}
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    </style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}">
+</head>
+<body>
+<button class="nav-toggle" type="button" aria-label="Open menu" onclick="toggleNav()">☰</button>
+    <div class="nav-shade" id="navShade" onclick="toggleNav()"></div>
+    <nav class="side-nav" id="sideNav">
+        <div class="nav-brand">TEAM AKI / MENU</div>
+        <a href="/dashboard">⌂ &nbsp; Dashboard</a>
+        <a href="#projects">▦ &nbsp; Projects</a>
+        <a href="#" onclick="document.getElementById('createModal').classList.add('show');toggleNav();return false">＋ &nbsp; New project</a>
+        <a href="#" onclick="document.getElementById('passwordModal').classList.add('show');toggleNav();return false">⌑ &nbsp; Change password</a>
+        {% if is_admin %}<a href="{{ url_for('diagnostics_page') }}">◈ &nbsp; System diagnostics</a>{% endif %}
+        <form action="{{ url_for('logout') }}" method="POST" class="nav-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit">↪ &nbsp; Logout</button></form>
+    </nav>
+    <header>
+        <div class="logo">
+            <span class="logo-icon">👑</span>
+            <span class="logo-name">{{ site_name }}</span>
+        </div>
+        <div class="header-stats" aria-label="System status">
+            <span>● <strong>LIVE</strong></span>
+            <span>{{ running }} running</span>
+        </div>
+        <div class="header-right">
+            {% if is_admin %}<a href="{{ url_for('diagnostics_page') }}" class="btn">DIAGNOSTICS ◈</a>{% endif %}
+            <form action="{{ url_for('logout') }}" method="POST" class="header-logout-form"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="btn btn-red">LOGOUT</button></form>
+        </div>
+    </header>
+
+    <main id="projects" class="dashboard-main">
+        <div class="welcome-line"><div><small>TEAM AKI / WORKSPACE</small><h1>Good to see you, {{ username }}.</h1><p>Your services and projects, all in one place.</p></div><div class="count-chip">{{ running }} / {{ total }} RUNNING</div></div>
+
+        <section class="stats" aria-label="Host resource usage">
+            <div class="stat-card"><div class="stat-label">CPU LOAD</div><div class="stat-num ac" id="statCpu">--%</div></div>
+            <div class="stat-card"><div class="stat-label">MEMORY</div><div class="stat-num white" id="statRam">--%</div></div>
+            <div class="stat-card"><div class="stat-label">DISK USED</div><div class="stat-num white" id="statDisk">--%</div></div>
+        </section>
+
+        {% if servers %}
+            {% for name, cfg in servers.items() %}
+            <div class="server-card {{ cfg.status }}">
+                <div class="server-top">
+                    <span class="server-name">{{ name.upper() }}</span>
+                    <span class="status-badge {{ cfg.status }}">{{ cfg.status.upper() }}</span>
+                </div>
+                <div class="server-sub">⚡ {{ cfg.runtime }} • {{ cfg.main_file or 'main.py' }}</div>
+                <div class="actions">
+                    {% if cfg.status == 'running' %}
+                    <form action="/server/{{ name }}/stop" method="POST" style="display:inline" onsubmit="return dashboardProcessAction(event, this)">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="action-btn" style="color:#ef4444; border-color: rgba(239, 68, 68, 0.3);" title="Stop">Stop ■</button>
+                    </form>
+                    {% else %}
+                    <form action="/server/{{ name }}/start" method="POST" style="display:inline" onsubmit="return dashboardProcessAction(event, this)">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="action-btn" style="color:var(--ac); border-color: var(--ac-dim);" title="Start">Start ▶</button>
+                    </form>
+                    {% endif %}
+                    
+                    <a href="/server/{{ name }}" class="action-btn" title="View Console">Console ⚙️</a>
+                    
+                    <form action="/server/{{ name }}/upload" method="POST" enctype="multipart/form-data" style="display:inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="file" id="upload-{{ name }}" name="file" accept=".zip,.py,.js,.ts,.html,.css,.json,.txt,.md,.sh" style="display:none" onchange="this.form.submit()">
+                        <button type="button" class="action-btn" title="Upload Files" onclick="document.getElementById('upload-{{ name }}').click()">Upload 📁</button>
+                    </form>
+
+                    <form action="/server/delete/{{ name }}" method="POST" style="display:inline" onsubmit="return confirm('Delete {{ name }}?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="action-btn" style="color:#ef4444" title="Delete">🗑</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <section class="empty-state">
+                <div class="empty-icon">✦</div>
+                <h2>Your workspace is ready</h2>
+                <p>Create your first project, then upload a ZIP or an individual entry file to get started.</p>
+                <button class="action-btn empty-create" type="button" onclick="document.getElementById('createModal').classList.add('show')">＋ &nbsp; Create first project</button>
+            </section>
+        {% endif %}
+    </main>
+
+    <button class="fab" onclick="document.getElementById('createModal').classList.add('show')">+</button>
+
+    <div id="createModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="modal">
+            <div class="modal-title">NEW PROJECT</div>
+            <form action="/server/create" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label class="form-label">PROJECT NAME</label>
+                    <input class="form-input" name="name" placeholder="my-bot" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RUNTIME</label>
+                    <select class="form-input" name="runtime">
+                        <option value="python">Python</option>
+                        <option value="node">Node.js</option>
+                        <option value="php">PHP</option>
+                        <option value="go">Go</option>
+                        <option value="sh">Shell</option>
+                        <option value="static">Static site</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn modal-cancel" onclick="document.getElementById('createModal').classList.remove('show')">CANCEL</button>
+                    <button type="submit" class="modal-btn">CREATE</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="passwordModal" class="modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+        <div class="modal account-modal" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+            <div class="modal-title" id="passwordTitle">SECURE YOUR ACCOUNT</div>
+            <p class="account-hint">Use a unique password with at least 12 characters.</p>
+            <div class="form-group"><label class="form-label" for="currentPassword">CURRENT PASSWORD</label><input class="form-input" id="currentPassword" type="password" autocomplete="current-password" required></div>
+            <div class="form-group"><label class="form-label" for="newPassword">NEW PASSWORD</label><input class="form-input" id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+            <div class="form-group"><label class="form-label" for="confirmPassword">CONFIRM NEW PASSWORD</label><input class="form-input" id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+            <p id="passwordMessage" class="account-message" role="status" aria-live="polite"></p>
+            <div class="modal-actions"><button type="button" class="modal-btn modal-cancel" onclick="document.getElementById('passwordModal').classList.remove('show')">CANCEL</button><button type="button" class="modal-btn" onclick="changePassword()">UPDATE PASSWORD</button></div>
+        </div>
+    </div>
+
+    <script>
+        async function dashboardProcessAction(event, form) {
+            event.preventDefault();
+            const button = form.querySelector('button');
+            if (button) { button.disabled = true; button.textContent = 'Working…'; }
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || '', 'Accept':'application/json'}
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) throw new Error(payload.error || 'Action failed');
+                location.reload();
+            } catch (error) {
+                alert(error.message);
+                if (button) button.disabled = false;
+            }
+            return false;
+        }
+        async function changePassword() {
+            const message = document.getElementById('passwordMessage');
+            const current_password = document.getElementById('currentPassword').value;
+            const new_password = document.getElementById('newPassword').value;
+            const confirm_password = document.getElementById('confirmPassword').value;
+            message.textContent = 'Updating…';
+            try {
+                const response = await fetch('/account/password', {
+                    method:'POST', credentials:'same-origin',
+                    headers:{'Content-Type':'application/json','X-CSRF-Token':document.querySelector('meta[name="csrf-token"]')?.content || ''},
+                    body:JSON.stringify({current_password,new_password,confirm_password})
+                });
+                const result = await response.json();
+                if (!response.ok || !result.success) throw new Error(result.error || 'Password update failed');
+                message.textContent = 'Password updated. Refreshing your secure session…';
+                setTimeout(() => location.reload(), 500);
+            } catch (error) { message.textContent = error.message; }
+        }
+        function toggleNav(){
+            document.getElementById('sideNav').classList.toggle('open');
+            document.getElementById('navShade').classList.toggle('open');
+        }
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                document.getElementById('sideNav').classList.remove('open');
+                document.getElementById('navShade').classList.remove('open');
+                document.getElementById('createModal').classList.remove('show');
+                document.getElementById('passwordModal').classList.remove('show');
+            }
+        });
+        async function refreshStats(){
+            try {
+                const response = await fetch('/api/stats', {headers:{'Accept':'application/json'}, credentials:'same-origin'});
+                if (!response.ok) return;
+                const stats = await response.json();
+                for (const key of ['cpu','ram','disk']) {
+                    const element = document.getElementById('stat' + key.charAt(0).toUpperCase() + key.slice(1));
+                    if (element) element.textContent = Number(stats[key]).toFixed(0) + '%';
+                }
+            } catch (_) { /* resource cards retain their placeholder while offline */ }
+        }
+        refreshStats();
+        setInterval(refreshStats, 6000);
+    </script>
+</body>
+</html>

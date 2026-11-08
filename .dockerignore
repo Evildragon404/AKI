@@ -1,0 +1,11 @@
+.git
+.venv
+venv
+__pycache__
+*.py[cod]
+*.zip
+*.log
+.env
+servers
+.data.lock
+data.json.corrupt-*
